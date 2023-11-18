@@ -1,3 +1,9 @@
+# streamlit run app.py
+
+
+
+## D-Wave Solver section
+
 from time import time
 import warnings
 
@@ -147,11 +153,13 @@ class JSSCQM():
         self.completion_time = self.best_sample['makespan']
 
 
-if __name__ == "__main__":
+def runApp(instance_name):
     """Modeling and solving Job Shop Scheduling using CQM solver."""
 
     # Start the timer
     start_time = time()
+
+    
 
     # Instantiate the parser
     parser = argparse.ArgumentParser(
@@ -160,7 +168,7 @@ if __name__ == "__main__":
 
     parser.add_argument('-instance', type=str,
                         help='path to the input instance file; ',
-                        default='input/instance5_5.txt')
+                        default='input/' + instance_name + '.txt')
 
     parser.add_argument('-tl', type=int,
                         help='time limit in seconds')
@@ -241,13 +249,187 @@ if __name__ == "__main__":
     # Plot solution
     job_plotter.plot_solution(jss_data, model.solution, out_plot_file)
 
-    print("jss_data")
+    return(model)
 
-    print(jss_data)
 
-    print("\n")
 
-    print("model_solution")
-    print(model.solution)
-    print("\n")
-    print(out_sol_file)
+# UI Section
+
+
+import streamlit as st
+import streamlit.components.v1 as components
+import pandas as pd
+import json
+from tabulate import tabulate
+from time import time
+from datetime import datetime, timedelta
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import pickle
+
+
+# default data
+model_completion_time = max_makespan = model_building_time = solver_time = start_time = 0
+
+data = {
+    (0, 0): (0, 0.0, 1),
+    (1, 1): (1, 1.0, 2),
+    (2, 2): (2, 3.0, 1)
+    # This represents a simple scenario with 3 jobs and 3 machines
+}
+
+# Base date for the Gantt chart
+base_date = datetime(2023, 1, 1)
+
+
+
+#model = runApp()
+
+#data = model.solution
+
+# Save data with pickle
+#with open('solution.pkl', 'wb') as f:
+#    pickle.dump(data, f)
+
+# Load data from pickle file
+with open('solution.pkl', 'rb') as f:
+    data = pickle.load(f)
+
+
+
+# Function to transform the data for Google Charts
+def transform_data(data):
+    transformed_data = []
+    for (machine, job), (task, start, duration) in data.items():
+        if duration > 0:
+            start_millis = start * 60 * 1000  # Convert minutes to milliseconds
+            end_millis = (start + duration) * 60 * 1000
+            transformed_data.append([f"Machine {machine}", f"Job {job}", start_millis, end_millis])
+    return json.dumps(transformed_data)
+
+chart_data = transform_data(data)
+
+# HTML and JavaScript for the Google Chart with Fira Code font
+
+st.set_page_config(layout="wide")
+
+# Define the options for the dropdown
+options = ["instance3_3", "instance5_5", "instance5_8", 
+           "instance6_6", "instance8_8", "instance10_10", "instance30_30"]
+
+# Add the select box to the sidebar
+instance_name = st.sidebar.selectbox("Select an Instance", options)
+
+def read_lines(filename):
+    with open(filename, 'r') as file:
+        first_line = file.readline().strip()
+        second_line = file.readline().strip()  # strip() removes any trailing newline character
+    return first_line, second_line
+
+
+first_line, second_line = read_lines('input/' + instance_name + '.txt')
+st.sidebar.markdown(f"""
+    <style>
+        .big-bold-text {{
+            font-size: 24px; /* Adjust size as needed */
+            font-weight: bold;
+        }}
+    </style>
+    <p class='big-bold-text'>{first_line}</p>
+    <p class='big-bold-text'>{second_line}</p>
+    """, unsafe_allow_html=True)
+
+
+
+if st.sidebar.button('Run'):
+    model = runApp(instance_name)
+    data = model.solution
+    chart_data = transform_data(data)
+
+
+# Custom CSS to make the sidebar skinnier
+st.markdown("""
+    <style>
+        .css-1d391kg {
+            width: 150px;  /* Adjust the width as needed */
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+# width: 1000,
+# height: 1000,
+
+# HTML and JavaScript for the Google Chart with adjusted height
+html_string = f"""
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load("current", {{packages:["timeline"]}});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {{
+        var container = document.getElementById('timeline');
+        var chart = new google.visualization.Timeline(container);
+        var dataTable = new google.visualization.DataTable();
+
+        dataTable.addColumn({{ type: 'string', id: 'Machine' }});
+        dataTable.addColumn({{ type: 'string', id: 'Job' }});
+        dataTable.addColumn({{ type: 'number', id: 'Start' }});
+        dataTable.addColumn({{ type: 'number', id: 'End' }});
+        dataTable.addRows({chart_data});
+
+        var options = {{
+          width: 1500  
+        }};
+
+        chart.draw(dataTable, options);
+      }}
+    </script>
+    <style>
+      body {{
+        font-family: 'Fira Code', monospace;
+      }}
+      #chart-container {{
+        width: auto;  // Set the width of the container to 100%
+        overflow: auto;  // Enable scrolling if the chart is wider than the container
+      }}
+      #timeline {{
+        height: 500px;  // Adjust the height of the chart as needed
+      }}
+    </style>
+  </head>
+  <body>
+    <div id="chart-container">
+      <div id="timeline"></div>
+    </div>
+  </body>
+</html>
+"""
+
+
+# Streamlit app
+st.title("Job Scheduling Dashboard")
+
+# Embed the chart in Streamlit
+st.components.v1.html(html_string, height=700, width=1200)
+
+'''
+# Displaying solution results
+st.subheader("Solution Results")
+
+total_runtime = datetime.now() - start_time
+total_runtime_seconds = total_runtime.total_seconds()
+
+# Creating a DataFrame for the results
+results_df = pd.DataFrame({
+    "Metric": ["Completion Time", "Max Possible Make-Span", "Model Building Time (s)", "Solver Call Time (s)", "Total Runtime (s)"],
+    "Value": [model_completion_time, max_makespan, model_building_time, solver_time, total_runtime_seconds]
+})
+
+# Display the results using Streamlit's built-in method
+st.table(results_df)
+'''
