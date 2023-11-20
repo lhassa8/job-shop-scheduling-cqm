@@ -281,6 +281,15 @@ data = {
 # Base date for the Gantt chart
 base_date = datetime(2023, 1, 1)
 
+equipment_names = [
+    "Lathe", "Drill Press", "Grinder", "Laser Cutter", "Milling Machine",
+    "CNC Machine", "Plasma Cutter", "Water Jet Cutter", "Sheet Metal Bender",
+    "Punch Press", "Spot Welder", "MIG Welder", "TIG Welder", "Band Saw",
+    "Scroll Saw", "Table Saw", "Jointer", "Planer", "Sanding Machine",
+    "Router Table", "Dust Collector", "Air Compressor", "Bench Grinder",
+    "Drill Sharpener", "Oscillating Sander", "Chop Saw", "Panel Saw",
+    "Edge Bander", "Wood Lathe", "Surface Grinder"
+]
 
 
 #model = runApp()
@@ -302,9 +311,10 @@ def transform_data(data):
     transformed_data = []
     for (machine, job), (task, start, duration) in data.items():
         if duration > 0:
+            machine_name = equipment_names[machine] if machine < len(equipment_names) else f"Machine {machine}"
             start_millis = start * 60 * 1000  # Convert minutes to milliseconds
             end_millis = (start + duration) * 60 * 1000
-            transformed_data.append([f"Machine {machine}", f"Job {job}", start_millis, end_millis])
+            transformed_data.append([machine_name, f"Job {job}", start_millis, end_millis])
     return json.dumps(transformed_data)
 
 chart_data = transform_data(data)
@@ -380,6 +390,8 @@ html_string = f"""
         dataTable.addColumn({{ type: 'string', id: 'Job' }});
         dataTable.addColumn({{ type: 'number', id: 'Start' }});
         dataTable.addColumn({{ type: 'number', id: 'End' }});
+
+        
         dataTable.addRows({chart_data});
 
         var options = {{
