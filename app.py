@@ -341,6 +341,18 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
+st.sidebar.markdown(f"""
+    <style>
+        .big-bold-text {{
+            font-size: 26px; /* Adjust size as needed */
+            font-weight: bold;
+        }}
+    </style>
+    <p class='big-bold-text'>   Backend Processes</p>
+    """, unsafe_allow_html=True)
+
+st.sidebar.markdown('<hr style="border:1px solid #ccc; margin-top: 1em; margin-bottom: 1em"/>', unsafe_allow_html=True)
+
 # Define the options for the dropdown
 options = ["instance3_3", "instance5_5", "instance5_8", 
            "instance6_6", "instance8_8", "instance10_10", "instance30_30"]
@@ -354,12 +366,13 @@ def read_lines(filename):
         second_line = file.readline().strip()  # strip() removes any trailing newline character
     return first_line, second_line
 
+st.sidebar.markdown('<hr style="border:1px solid #ccc; margin-top: 1em; margin-bottom: 1em"/>', unsafe_allow_html=True)
 
 first_line, second_line = read_lines('input/' + instance_name + '.txt')
 st.sidebar.markdown(f"""
     <style>
         .big-bold-text {{
-            font-size: 24px; /* Adjust size as needed */
+            font-size: 18px; /* Adjust size as needed */
             font-weight: bold;
         }}
     </style>
@@ -367,6 +380,8 @@ st.sidebar.markdown(f"""
     <p class='big-bold-text'>{second_line}</p>
     """, unsafe_allow_html=True)
 
+# Add a divider to the sidebar
+st.sidebar.markdown('<hr style="border:1px solid #ccc; margin-top: 1em; margin-bottom: 1em"/>', unsafe_allow_html=True)
 
 
 if st.sidebar.button('Run'):
@@ -488,7 +503,8 @@ html_string = f"""
 
 
 # Streamlit app
-st.title("Job Scheduling Dashboard")
+
+st.title("Machine Shop - Job Scheduling Dashboard")
 st.text_input("Total Job Completion Time", f"{total_time}", disabled=True)
 
 # Embed the chart in Streamlit
