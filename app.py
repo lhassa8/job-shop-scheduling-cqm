@@ -1,3 +1,5 @@
+# pip install streamlit
+
 # streamlit run app.py
 
 
@@ -249,7 +251,7 @@ def runApp(instance_name):
     # Plot solution
     job_plotter.plot_solution(jss_data, model.solution, out_plot_file)
 
-    return(model)
+    return(model, model_building_time, solver_time, time() - start_time)
 
 
 
@@ -268,8 +270,10 @@ import matplotlib.dates as mdates
 import pickle
 
 
+
+
 # default data
-model_completion_time = max_makespan = model_building_time = solver_time = start_time = 0
+st_model_completion_time = st_max_makespan = st_model_building_time = st_solver_time = st_start_time = 0
 
 data = {
     (0, 0): (0, 0.0, 1),
@@ -323,6 +327,19 @@ chart_data = transform_data(data)
 
 st.set_page_config(layout="wide")
 
+# Load Fira Code font from Google Fonts
+fira_code_font_url = "https://fonts.googleapis.com/css2?family=Fira+Code&display=swap"
+
+# Custom CSS to set Fira Code as the global font
+st.markdown(f"""
+    <style>
+        @import url('{fira_code_font_url}');
+        html, body, [class*="st-"] {{
+            font-family: 'Fira Code', monospace;
+        }}
+    </style>
+    """, unsafe_allow_html=True)
+
 # Define the options for the dropdown
 options = ["instance3_3", "instance5_5", "instance5_8", 
            "instance6_6", "instance8_8", "instance10_10", "instance30_30"]
@@ -352,9 +369,44 @@ st.sidebar.markdown(f"""
 
 
 if st.sidebar.button('Run'):
-    model = runApp(instance_name)
+    model, model_building_time, solver_time, run_time = runApp(instance_name)
     data = model.solution
     chart_data = transform_data(data)
+    
+
+    values = [f"{model.completion_time:.2f} sec.", 
+                f"{model_building_time:.2f} sec.", 
+                f"{solver_time:.2f} sec.",
+                f"{run_time:.2f} sec."]
+
+    # Create a DataFrame with the results
+    results_df = pd.DataFrame({
+        "Metric": ["Completion Time", "Model Building Time (s)", "Solver Call Time (s)", "Total Runtime (s)"],
+        "Value": values
+    }).set_index("Metric")
+
+    # Custom CSS for table styling
+    st.markdown("""
+        <style>
+            .dataframe th {
+                font-family: 'Fira Code', monospace;
+                font-size: 18px;
+                color: #4F8BF9;  /* Adjust header color as needed */
+            }
+            .dataframe td {
+                font-family: 'Fira Code', monospace;
+                font-size: 16px;
+                color: #333333;  /* Adjust cell color as needed */
+            }
+            .stTable {
+                width: 800px;  /* Set the width of the table */
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+    # Display the DataFrame as a table in Streamlit
+    st.sidebar.table(results_df)
+
 
 
 # Custom CSS to make the sidebar skinnier
@@ -429,19 +481,9 @@ st.title("Job Scheduling Dashboard")
 # Embed the chart in Streamlit
 st.components.v1.html(html_string, height=700, width=1200)
 
-'''
-# Displaying solution results
-st.subheader("Solution Results")
 
-total_runtime = datetime.now() - start_time
-total_runtime_seconds = total_runtime.total_seconds()
+# Assuming 'model', 'model_building_time', 'solver_time', and 'start_time' are already defined
 
-# Creating a DataFrame for the results
-results_df = pd.DataFrame({
-    "Metric": ["Completion Time", "Max Possible Make-Span", "Model Building Time (s)", "Solver Call Time (s)", "Total Runtime (s)"],
-    "Value": [model_completion_time, max_makespan, model_building_time, solver_time, total_runtime_seconds]
-})
+# Create a DataFrame with the results
 
-# Display the results using Streamlit's built-in method
-st.table(results_df)
-'''
+

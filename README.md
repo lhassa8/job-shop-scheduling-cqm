@@ -20,7 +20,15 @@ can be solved using a Leap hybrid CQM solver.
 
 ## Usage
 
-To run the demo, type:
+Lars' Version:
+
+    pip install streamlit
+    streamlit run app.py
+   
+
+
+
+To run the original demo, type:
 
     python job_shop_scheduler.py
 
