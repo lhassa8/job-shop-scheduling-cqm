@@ -270,8 +270,6 @@ import matplotlib.dates as mdates
 import pickle
 
 
-
-
 # default data
 st_model_completion_time = st_max_makespan = st_model_building_time = st_solver_time = st_start_time = 0
 
@@ -308,20 +306,22 @@ equipment_names = [
 with open('solution.pkl', 'rb') as f:
     data = pickle.load(f)
 
+print("data")
+print(data)
 
-
+# Function to transform the data for Google Charts
 # Function to transform the data for Google Charts
 def transform_data(data):
     transformed_data = []
-    for (machine, job), (task, start, duration) in data.items():
+    for (job, machine), (task, start, duration) in data.items():
         if duration > 0:
-            machine_name = equipment_names[machine] if machine < len(equipment_names) else f"Machine {machine}"
             start_millis = start * 60 * 1000  # Convert minutes to milliseconds
             end_millis = (start + duration) * 60 * 1000
-            transformed_data.append([machine_name, f"Job {job}", start_millis, end_millis])
+            transformed_data.append([f"Machine {machine}", f"Job {job}", start_millis, end_millis])
     return json.dumps(transformed_data)
 
 chart_data = transform_data(data)
+
 
 # HTML and JavaScript for the Google Chart with Fira Code font
 
@@ -369,19 +369,22 @@ st.sidebar.markdown(f"""
 
 
 if st.sidebar.button('Run'):
+    
     model, model_building_time, solver_time, run_time = runApp(instance_name)
     data = model.solution
     chart_data = transform_data(data)
     
+    # Save data with pickle so initial load has values without having to run 
+    with open('solution.pkl', 'wb') as f:
+        pickle.dump(data, f)
 
-    values = [f"{model.completion_time:.2f} sec.", 
-                f"{model_building_time:.2f} sec.", 
+    values = [f"{model_building_time:.2f} sec.", 
                 f"{solver_time:.2f} sec.",
                 f"{run_time:.2f} sec."]
 
     # Create a DataFrame with the results
     results_df = pd.DataFrame({
-        "Metric": ["Completion Time", "Model Building Time (s)", "Solver Call Time (s)", "Total Runtime (s)"],
+        "Metric": ["Model Building Time (s)", "Solver Call Time (s)", "Total Runtime (s)"],
         "Value": values
     }).set_index("Metric")
 
@@ -445,9 +448,10 @@ html_string = f"""
 
         
         dataTable.addRows({chart_data});
+        
 
         var options = {{
-          width: 1500  
+          width: 1200  
         }};
 
         chart.draw(dataTable, options);
@@ -462,7 +466,8 @@ html_string = f"""
         overflow: auto;  // Enable scrolling if the chart is wider than the container
       }}
       #timeline {{
-        height: 500px;  // Adjust the height of the chart as needed
+        height: 600px;
+        // width: 1200px  
       }}
     </style>
   </head>
