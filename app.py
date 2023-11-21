@@ -306,19 +306,20 @@ equipment_names = [
 with open('solution.pkl', 'rb') as f:
     data = pickle.load(f)
 
-print("data")
-print(data)
+#print("data")
+#print(data)
 
-# Function to transform the data for Google Charts
 # Function to transform the data for Google Charts
 def transform_data(data):
     transformed_data = []
     for (job, machine), (task, start, duration) in data.items():
         if duration > 0:
+            machine_name = equipment_names[machine]  # Use the equipment name
             start_millis = start * 60 * 1000  # Convert minutes to milliseconds
             end_millis = (start + duration) * 60 * 1000
-            transformed_data.append([f"Machine {machine}", f"Job {job}", start_millis, end_millis])
+            transformed_data.append([machine_name, f"Job {job}", start_millis, end_millis])
     return json.dumps(transformed_data)
+
 
 chart_data = transform_data(data)
 
