@@ -271,7 +271,7 @@ import pickle
 
 
 # default data
-st_model_completion_time = st_max_makespan = st_model_building_time = st_solver_time = st_start_time = 0
+st_model_completion_time = st_max_makespan = st_model_building_time = st_solver_time = st_start_time = total_time = 0
 
 data = {
     (0, 0): (0, 0.0, 1),
@@ -383,6 +383,10 @@ if st.sidebar.button('Run'):
                 f"{solver_time:.2f} sec.",
                 f"{run_time:.2f} sec."]
 
+    total_time = (f"{model.completion_time:.0f} minutes")
+
+    print("total time: " + total_time)
+
     # Create a DataFrame with the results
     results_df = pd.DataFrame({
         "Metric": ["Model Building Time (s)", "Solver Call Time (s)", "Total Runtime (s)"],
@@ -410,6 +414,8 @@ if st.sidebar.button('Run'):
 
     # Display the DataFrame as a table in Streamlit
     st.sidebar.table(results_df)
+
+    #st.text_input("Total Job Completion Time", f"{total_time}", disabled=True)
 
 
 
@@ -483,9 +489,13 @@ html_string = f"""
 
 # Streamlit app
 st.title("Job Scheduling Dashboard")
+st.text_input("Total Job Completion Time", f"{total_time}", disabled=True)
 
 # Embed the chart in Streamlit
-st.components.v1.html(html_string, height=700, width=1200)
+st.components.v1.html(html_string, height=800, width=1200)
+
+#st.text_input("Total Job Completion Time", f"{total_time}", disabled=True)
+
 
 
 # Assuming 'model', 'model_building_time', 'solver_time', and 'start_time' are already defined
